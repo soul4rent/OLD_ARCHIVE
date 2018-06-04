@@ -1,0 +1,320 @@
+<html>
+<head>
+<script>
+
+
+//=====================================================================================
+
+//KYLE NOTE: Javascript IS object oriented (kinda), in which you can make objects and have them hold data.
+
+function tile(what,solid,allowleft,allowright) // this function is to define tiles
+{
+this.what=what; //symbol for each tile
+this.solid=solid; //determines if player can "mirror" onto the tile
+this.allowleft=allowleft; //determines if the player can move left onto this tile
+this.allowright=allowright; //determines if the player can move right onto this tile
+}
+
+//======================================================================================
+
+function entity(what,solid,moveleft,moveright) // this function is to define entities
+{
+this.what=what; //this is the symbol used for each entity
+this.solid=solid; //determines if the player can "mirror" onto the object
+this.moveleft=moveleft; //determines whether or not this entity can move left
+this.moveright=moveright; //determines whether or not this entity can move right
+}
+
+//======================================================================================
+
+
+//????????????????????????????????????????????????
+function loadtest()		//this is just what displays the stuff (in the form of strings)
+{
+z='';
+	for (var i=0;i<lvlentity.length;i++)
+	{
+		if (lvlentity[i]==='clear')
+		{
+		z = z + lvltile[i].what + " . ";
+		}
+		else
+		{
+		z = z + lvlentity[i].what + " . ";
+		}
+	}
+document.getElementById('stage').innerHTML=z; //this is just the HTML stuff to display things in the browser
+return;
+}
+//?????????????????????????????????????????????????
+
+
+//============================TILES AND STUFF=========================================================
+
+//KYLE NOTE: This is where the program starts, since it ignores all functions to begin with.
+
+var player=new entity("&",true,true,true); //the player entity; position is tracked with the 'x' variable to manipulate arrays
+
+var exit=new tile("(e)",false,true,true); //end of the level
+
+var lblock=new entity('[L]',true,true,false); //block that can only be pushed left
+
+var rblock=new entity('[R]',true,false,true); //block that can only be pushed right
+
+var ecblock=new entity('[#]',true,true,true); //"ec" stands for existential crisis, since this block can't decide whether it wants to be an lblock or an rblock.
+
+var block=new tile('[X]',true,false,false); //walls (can't move, can't be passed)
+
+var notile=new tile('-',false,true,true); // blank tile
+
+var ltile=new tile('<',false,true,false); //tile that one can only move onto in the left direction (if one is already on the tile, they can move both ways)
+
+var rtile=new tile('>',false,false,true); //same as above, only right direction
+
+var xtile=new tile('+',false,true,true); // tile that you can move over, but not teleport from
+
+var ectile=new tile('=',false,false,false); //tile you can teleport to, but can't move over without teleporting.
+
+var switcher=new tile('S',false,true,true); //opens/closes doors
+
+var dooron=new tile('I',true,false,false); //Closed door
+
+var dooroff=new tile('O',false,true,true); //Open door
+
+//===========================level declarations================================================
+
+var lvl=1;
+
+//first level initilization
+
+lvltile=[block,notile,notile,notile,exit,block]; // these are used as the actual level "stage" stuff. They change depending on player actions
+lvlentity=['clear','clear',player,'clear','clear','clear'];
+x=2; //player's position in the "entity" array
+
+//=============================================================================================
+
+function nxtlvl() //This function assigns new values for each level to the tile layer, entity layer, and x cords. It also works as the reset button for each level.
+{
+
+//Each level has two layers: the "entitys", or things that move, and the "tiles", or things that don't move.
+
+if (lvl===1)
+{
+lvltile=[block,notile,notile,notile,exit,block];
+lvlentity=['clear','clear',player,'clear','clear','clear'];
+x=2;
+}
+else if (lvl===2)
+{
+lvltile=[block,notile,notile,block,block,exit,notile,notile,block];
+lvlentity=['clear','clear',player,'clear','clear','clear','clear','clear','clear'];
+x=2;
+}
+else if (lvl===3)
+{
+lvltile=[block,exit,notile,notile,notile,notile,notile,notile,block];
+lvlentity=['clear','clear','clear',ecblock,player,ecblock,'clear','clear','clear'];
+x=4;
+}
+else if (lvl===4)
+{
+lvltile=[block,ltile,rtile,ltile,rtile,ltile,exit,rtile,ltile,rtile,notile,block];
+lvlentity=['clear','clear','clear','clear','clear','clear','clear','clear','clear','clear',player,'clear'];
+x=10;
+}
+else if (lvl===5)
+{
+lvltile=[block,switcher,ltile,ltile,exit,dooroff,switcher,ltile,block];
+lvlentity=['clear',player,'clear','clear','clear','clear','clear','clear','clear'];
+x=1;
+}
+else if (lvl===6)
+{
+lvltile=[block,notile,ltile,switcher,ltile,switcher,dooroff,rtile,exit,notile,ltile,ltile,notile,block];
+lvlentity=['clear','clear','clear','clear','clear','clear','clear','clear','clear',ecblock,'clear','clear',player,'clear'];
+x=12;
+
+}
+
+else
+{
+document.write('winner');
+}
+
+loadtest();
+return;
+
+}
+
+//================================================================================================
+
+function wintest() //Tests if you have reached the level exit.
+{
+	if (lvltile[x]===exit)
+	{
+	lvl=lvl+1;
+	nxtlvl();
+	}
+}
+
+//=============================================================================================
+
+function switchtest() //tests if a switch was steped on.
+{
+
+if (lvltile[x]===switcher)
+{
+
+	for (var i=0;i<lvlentity.length;i++)
+	{
+	
+	if (lvlentity[i]==='clear')
+	{
+		if (lvltile[i]===dooron)
+		{
+		lvltile[i]=dooroff;
+		}
+		else if (lvltile[i]===dooroff)
+		{
+		lvltile[i]=dooron;
+		}
+		else
+		{
+		}
+	}
+	
+	}
+	
+}	
+
+}
+
+//===============================================================================================
+
+//KYLE NOTE: This is a function called by the "left" button. Notice how all variables are shared between functions.
+
+function moveleft() //move left stuff
+{
+	if (lvlentity[x-1]==='clear') //if there isn't an entity on the tile directly to the left
+	{
+		if (lvltile[x-1].allowleft===true) //if the tile directly to the left allows the player to move left
+		{
+		lvlentity[x]='clear'; //level entity player was on is now "clear"
+		x=x-1;
+		lvlentity[x]=player;
+		
+		switchtest(); //test for switches
+		loadtest(); //load next iteration
+		wintest(); //check if player is on exit
+		}
+	}
+	else if (lvlentity[x-1].moveleft===true) //if pushing pushable block
+	{
+			if (lvlentity[x-2]==='clear' && lvltile[x-2].allowleft===true)
+			{
+			lvlentity[x-2]=lvlentity[x-1];
+			lvlentity[x-1]=player;
+			lvlentity[x]='clear';
+			x=x-1;
+			
+			switchtest();
+			loadtest();
+			wintest();
+			}
+	}
+	
+}
+
+//======================================================================================
+
+function moveright() //move right stuff
+{
+	if (lvlentity[x+1]==='clear')
+	{
+		if(lvltile[x+1].allowright===true)
+		{
+		lvlentity[x]='clear';
+		x=x+1;
+		lvlentity[x]=player;
+		
+		switchtest();
+		loadtest();
+		wintest();
+		}
+	}
+	else if (lvlentity[x+1].moveright===true)
+	{
+			if (lvlentity[x+2]==='clear' && lvltile[x+2].allowright===true)
+			{
+			lvlentity[x+2]=lvlentity[x+1];
+			lvlentity[x+1]=player;
+			lvlentity[x]='clear';
+			x=x+1;
+			
+			switchtest();
+			loadtest();
+			wintest();
+			}
+	}
+
+}
+
+//===========================================================================================================
+
+function mirrorcords()	//mirrors player's position in the array using the magical formula I came up with ("array.length" - "current array label" - "1"),
+						//assuming that the first element in the array is 'array[0]'. Leave out the "- 1" part if the first element is 'array[1]'.
+{
+
+	if (lvlentity[lvlentity.length-x-1].solid !== true || lvlentity[lvlentity.length-x-1]==='clear')
+	{
+		if (lvltile[lvltile.length-x-1].solid === false && lvltile[x]!==xtile)
+		{
+		lvlentity[x]='clear';
+		x=lvltile.length-x-1;
+		lvlentity[x]=player;
+		
+		switchtest();
+		loadtest();
+		wintest();
+		}
+	}
+
+}
+
+//====================================================================================
+
+
+</script>
+</head>
+<body onload="loadtest()"> 
+
+<!-- KYLE NOTE: Javascript interacts with the functions via events. The javascript code should be sandwiched between the <script>
+ and </script> html tags.
+
+All html starts with <html> and ends with </html> at the very end of the program. Head/Body tags aren't that important, just know its usually
+good practice to put your javascript code between a <head> and </head> tag, and the webpage code between the <body> and </body> tags.
+ -->
+
+<center><p id='stage'></p><p>/\</p></center>
+
+<center>
+<button onclick='moveleft()'>left</button>
+<button onclick='mirrorcords()'>mirror position</button>
+<button onclick='moveright()'>right</button>
+</center>
+
+<button onclick='nxtlvl()'>reset level</button>
+
+<p> & = player you control<br>
+(e) = the end of the level <br>
+[X] = wall <br>
+- = blank tile <br>
+> = tile things can only move right onto <br>
+< = tile things can only move left onto <br>
+[#] = pushable crate <br>
+S = switch that opens and closes doors <br>
+0 = open door <br>
+I = closed door </p>
+
+</body>
+</html>
